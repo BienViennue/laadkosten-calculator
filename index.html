@@ -1,18 +1,15 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <title>EV Laadkost Calculator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
   <meta name="theme-color" content="#5BA9C2">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="icon-192.png">
-  <link rel="shortcut icon" href="icon-192.png">
-  <link rel="apple-touch-icon" href="icon-192.png">
-
+  <title>EV Laadkost Calculator</title>
   <style>
     :root { --bienviennue-blauw: #5BA9C2; }
     body {
@@ -69,6 +66,18 @@
     }
     .hidden { display: none; }
     a { color: var(--bienviennue-blauw); }
+
+    .radio-options label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.8em;
+      font-weight: bold;
+      color: var(--bienviennue-blauw);
+      gap: 0.5em;
+    }
+    .radio-options input[type="radio"] {
+      transform: scale(1.2);
+    }
   </style>
 </head>
 <body>
@@ -97,9 +106,9 @@
     <input type="number" id="days" min="1" value="3">
 
     <label class="radio-label">🚗 Type voertuig:</label>
-    <div style="margin-top: 0.3em;">
-      <label><input type="radio" name="vehicleType" value="fullEV" checked> Full EV</label><br>
-      <label><input type="radio" name="vehicleType" value="hybrid"> Hybrid</label>
+    <div class="radio-options">
+      <label><input type="radio" name="vehicleType" value="fullEV" checked> <span>Full EV</span></label>
+      <label><input type="radio" name="vehicleType" value="hybrid"> <span>Hybrid</span></label>
     </div>
 
     <label>🔋 Maximale batterijcapaciteit (kWh):</label>
@@ -149,17 +158,15 @@
       if (!isNaN(maxBattery)) baseKwh = maxBattery;
 
       const arrivalRate = baseKwh * kwhPrice;
-      const fixedRate = (vehicleType === 'fullEV')
-        ? 30 * kwhPrice * (1 + winst / 100)
-        : baseKwh * kwhPrice * (1 + winst / 100);
+      const fixedRate = 30 * kwhPrice * (1 + winst / 100);
 
       if (vehicleType === 'fullEV') {
         document.getElementById('arrivalRateEV').value = arrivalRate.toFixed(2);
+        document.getElementById('fixedRate').value = fixedRate.toFixed(2);
       } else {
         document.getElementById('arrivalRateHybrid').value = arrivalRate.toFixed(2);
+        document.getElementById('fixedRate').value = (15 * kwhPrice * (1 + winst / 100)).toFixed(2);
       }
-
-      document.getElementById('fixedRate').value = fixedRate.toFixed(2);
     }
 
     function calculate() {
@@ -180,8 +187,10 @@
 
       const arrivalCost = baseKwh * kwhPrice;
       const arrivalIncome = arrivalCost;
-      const kwhPerNight = vehicleType === 'fullEV' ? 30 : baseKwh;
-      const extraCost = (days - 1) * kwhPerNight * kwhPrice;
+      const kwhPerNight = 30;
+      const extraCost = (vehicleType === 'fullEV')
+        ? (days - 1) * kwhPerNight * kwhPrice
+        : (days - 1) * 15 * kwhPrice;
       const extraIncome = (days - 1) * fixedRate;
 
       const totalCost = arrivalCost + extraCost;
@@ -189,7 +198,7 @@
       const totalProfit = totalIncome - totalCost;
       const winstPercentage = ((totalProfit / totalCost) * 100).toFixed(1);
 
-      const prijsLabel = `📆 Volgende ${days - 1} nacht(en) – obv ${kwhPerNight} kWh/nacht aan €${kwhPrice.toFixed(4)}:`;
+      const prijsLabel = `📆 Volgende ${days - 1} nacht(en) – obv ${vehicleType === 'fullEV' ? '30' : '15'} kWh/nacht aan €${kwhPrice.toFixed(4)}:`;
 
       document.getElementById('results').innerHTML = `
         <strong>📅 Overzicht voor ${days} nacht(en):</strong><br><br>
