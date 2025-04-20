@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EV Laadkost Calculator</title>
-  <meta name="theme-color" content="#5BA9C2" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
   <link rel="icon" type="image/png" href="icon-192.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#5BA9C2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <style>
     :root { --bienviennue-blauw: #5BA9C2; }
     body {
@@ -25,7 +25,7 @@
       text-align: center;
       color: var(--bienviennue-blauw);
     }
-    label, .radio-label {
+    label {
       display: block;
       margin-top: 1em;
       font-weight: bold;
@@ -44,6 +44,18 @@
       padding: 1em;
       border-radius: 8px;
       box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    }
+    .radio-inline {
+      display: flex;
+      gap: 2em;
+      margin-top: 0.5em;
+    }
+    .radio-inline label {
+      display: flex;
+      align-items: center;
+      gap: 0.4em;
+      font-weight: bold;
+      color: var(--bienviennue-blauw);
     }
     .result {
       background: #ffffff;
@@ -66,18 +78,6 @@
     }
     .hidden { display: none; }
     a { color: var(--bienviennue-blauw); }
-
-    .radio-group {
-      display: flex;
-      flex-direction: column;
-      margin-top: 0.5em;
-    }
-    .radio-option {
-      display: flex;
-      align-items: center;
-      gap: 0.5em;
-      margin-bottom: 0.3em;
-    }
   </style>
 </head>
 <body>
@@ -105,10 +105,10 @@
     <label>🛏️ Aantal overnachtingen:</label>
     <input type="number" id="days" min="1" value="3" />
 
-    <label class="radio-label">🚗 Type voertuig:</label>
-    <div class="radio-group">
-      <label class="radio-option"><input type="radio" name="vehicleType" value="fullEV" checked /> Full EV</label>
-      <label class="radio-option"><input type="radio" name="vehicleType" value="hybrid" /> Hybrid</label>
+    <label>🚗 Type voertuig:</label>
+    <div class="radio-inline">
+      <label><input type="radio" name="vehicleType" value="fullEV" checked /> Full EV</label>
+      <label><input type="radio" name="vehicleType" value="hybrid" /> Hybrid</label>
     </div>
 
     <label>🔋 Maximale batterijcapaciteit (kWh):</label>
@@ -187,10 +187,8 @@
 
       const arrivalCost = baseKwh * kwhPrice;
       const arrivalIncome = arrivalCost;
-      const kwhPerNight = 30;
-      const extraCost = (vehicleType === 'fullEV')
-        ? (days - 1) * kwhPerNight * kwhPrice
-        : (days - 1) * 15 * kwhPrice;
+      const kwhPerNight = vehicleType === 'fullEV' ? 30 : 15;
+      const extraCost = (days - 1) * kwhPerNight * kwhPrice;
       const extraIncome = (days - 1) * fixedRate;
 
       const totalCost = arrivalCost + extraCost;
@@ -198,7 +196,7 @@
       const totalProfit = totalIncome - totalCost;
       const winstPercentage = ((totalProfit / totalCost) * 100).toFixed(1);
 
-      const prijsLabel = `📆 Volgende ${days - 1} nacht(en) – obv ${vehicleType === 'fullEV' ? '30' : '15'} kWh/nacht aan €${kwhPrice.toFixed(4)}:`;
+      const prijsLabel = `📆 Volgende ${days - 1} nacht(en) – obv ${kwhPerNight} kWh/nacht aan €${kwhPrice.toFixed(4)}:`;
 
       document.getElementById('results').innerHTML = `
         <strong>📅 Overzicht voor ${days} nacht(en):</strong><br><br>
