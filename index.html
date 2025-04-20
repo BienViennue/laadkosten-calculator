@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <title>EV Laadkost Calculator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="icon-192.png">
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#5BA9C2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#5BA9C2">
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="shortcut icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <style>
     :root { --bienviennue-blauw: #5BA9C2; }
     body {
@@ -146,15 +149,17 @@
       if (!isNaN(maxBattery)) baseKwh = maxBattery;
 
       const arrivalRate = baseKwh * kwhPrice;
-      const fixedRate = 30 * kwhPrice * (1 + winst / 100);
+      const fixedRate = (vehicleType === 'fullEV')
+        ? 30 * kwhPrice * (1 + winst / 100)
+        : baseKwh * kwhPrice * (1 + winst / 100);
 
       if (vehicleType === 'fullEV') {
         document.getElementById('arrivalRateEV').value = arrivalRate.toFixed(2);
-        document.getElementById('fixedRate').value = fixedRate.toFixed(2);
       } else {
         document.getElementById('arrivalRateHybrid').value = arrivalRate.toFixed(2);
-        document.getElementById('fixedRate').value = (15 * kwhPrice * (1 + winst / 100)).toFixed(2);
       }
+
+      document.getElementById('fixedRate').value = fixedRate.toFixed(2);
     }
 
     function calculate() {
@@ -175,7 +180,7 @@
 
       const arrivalCost = baseKwh * kwhPrice;
       const arrivalIncome = arrivalCost;
-      const kwhPerNight = vehicleType === 'fullEV' ? 30 : 15;
+      const kwhPerNight = vehicleType === 'fullEV' ? 30 : baseKwh;
       const extraCost = (days - 1) * kwhPerNight * kwhPrice;
       const extraIncome = (days - 1) * fixedRate;
 
