@@ -1,8 +1,7 @@
-
 {
   "name": "EV Laadkost Calculator",
   "short_name": "Laadkost",
-  "start_url": "./index.html",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#5BA9C2",
