@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EV Laadkost Calculator</title>
-  <link rel="icon" type="image/png" href="icon-192.png" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#5BA9C2" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <style>
+
+<!-- saved from url=(0052)https://bienviennue.github.io/laadkosten-calculator/ -->
+<html lang="nl"><head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EV Laadkost Calculator</title>
+<link href="https://bienviennue.github.io/laadkosten-calculator/icon-192.png" rel="icon" type="image/png"/>
+<link href="https://bienviennue.github.io/laadkosten-calculator/icon-192.png" rel="apple-touch-icon"/>
+<link href="https://bienviennue.github.io/laadkosten-calculator/manifest.json" rel="manifest"/>
+<meta content="#5BA9C2" name="theme-color"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="yes" name="mobile-web-app-capable"/>
+<style>
     :root { --bienviennue-blauw: #5BA9C2; }
     body {
       font-family: Arial, sans-serif;
@@ -78,65 +78,80 @@
     }
     .hidden { display: none; }
     a { color: var(--bienviennue-blauw); }
-  </style>
+  
+@media print {
+  #explanation-print {
+    display: block !important;
+  }
+}
+.klanten-explanation {
+  display: none;
+  margin-top: 2em;
+}
+</style>
 </head>
 <body>
-  <h1>🔌 EV Laadkost Calculator</h1>
-
-  <label for="lang">🌍 Taal / Language / Langue:</label>
-  <select id="lang">
-    <option value="nl">Nederlands</option>
-    <option value="en">English</option>
-    <option value="fr">Français</option>
-  </select>
-
-  <div class="section">
-    <label>⚡ Dagprijs elektriciteit per kWh (€):</label>
-    <input type="number" id="kwhPrice" step="0.0001" />
-    <div class="tip">
+<h1>🔌 EV Laadkost Calculator</h1>
+<label for="lang">🌍 Taal / Language / Langue:</label>
+<select id="lang">
+<option value="nl">Nederlands</option>
+<option value="en">English</option>
+<option value="fr">Français</option>
+</select>
+<div class="section">
+<label>⚡ Dagprijs elektriciteit per kWh (€):</label>
+<input id="kwhPrice" step="0.0001" type="number"/>
+<div class="tip">
       Gebaseerd op ons EDF-contract:
       <a href="https://particulier.edf.fr/fr/accueil/espace-client/mes-contrats.html" target="_blank">Bekijk contract</a>
-    </div>
+</div>
+<label>📈 Winstpercentage (%):</label>
+<input id="winstPercentage" max="300" min="0" step="1" type="number"/>
+<div class="tip">Wordt toegepast op forfait per nacht (standaard 57%)</div>
+<label>🛏️ Aantal overnachtingen:</label>
+<input id="days" min="1" type="number" value="3"/>
+<label>🚗 Type voertuig:</label>
+<div class="radio-inline">
+<label><input checked="" name="vehicleType" type="radio" value="fullEV"/> Full EV</label>
+<label><input name="vehicleType" type="radio" value="hybrid"/> Hybrid</label>
+</div>
+<label>🔋 Maximale batterijcapaciteit (kWh):</label>
+<input id="maxBattery" step="1" type="number"/>
+<div class="tip">Overschrijft standaardwaarden van 100 kWh (EV) of 15 kWh (Hybrid)</div>
+<div id="arrivalRateEVContainer">
+<label>💡 Voorstel aankomsttarief full EV (€):</label>
+<input id="arrivalRateEV" readonly="" type="number"/>
+<div class="tip">Break-even tarief o.b.v. 100 kWh of opgegeven capaciteit</div>
+</div>
+<div class="hidden" id="arrivalRateHybridContainer">
+<label>💡 Voorstel aankomsttarief hybrid (€):</label>
+<input id="arrivalRateHybrid" readonly="" type="number"/>
+<div class="tip">Break-even tarief o.b.v. 15 kWh of opgegeven capaciteit</div>
+</div>
+<div id="fixedRateContainer">
+<label>💶 Vast tarief per nacht vanaf nacht 2 (€):</label>
+<input id="fixedRate" step="0.01" type="number"/>
+</div>
+</div>
+<div class="result" id="results">
+<strong>📅 Overzicht voor 3 nacht(en):</strong><br/><br/>
+        🟢 <u>Dag van aankomst:</u><br/>
+        Onze kost: €21.24<br/>
+        Klant betaalt: €21.24<br/>
+        Winst: €0.00<br/><br/>
+<u>📆 Volgende 2 nacht(en) – obv 30 kWh/nacht aan €0.2124:</u><br/>
+        Onze kost: €12.74<br/>
+        Klant betaalt: €20.00<br/>
+        Winst: €7.26<br/><br/>
 
-    <label>📈 Winstpercentage (%):</label>
-    <input type="number" id="winstPercentage" step="1" min="0" max="300" />
-    <div class="tip">Wordt toegepast op forfait per nacht (standaard 57%)</div>
-
-    <label>🛏️ Aantal overnachtingen:</label>
-    <input type="number" id="days" min="1" value="3" />
-
-    <label>🚗 Type voertuig:</label>
-    <div class="radio-inline">
-      <label><input type="radio" name="vehicleType" value="fullEV" checked /> Full EV</label>
-      <label><input type="radio" name="vehicleType" value="hybrid" /> Hybrid</label>
-    </div>
-
-    <label>🔋 Maximale batterijcapaciteit (kWh):</label>
-    <input type="number" id="maxBattery" step="1" />
-    <div class="tip">Overschrijft standaardwaarden van 100 kWh (EV) of 15 kWh (Hybrid)</div>
-
-    <div id="arrivalRateEVContainer">
-      <label>💡 Voorstel aankomsttarief full EV (€):</label>
-      <input type="number" id="arrivalRateEV" readonly />
-      <div class="tip">Break-even tarief o.b.v. 100 kWh of opgegeven capaciteit</div>
-    </div>
-
-    <div id="arrivalRateHybridContainer" class="hidden">
-      <label>💡 Voorstel aankomsttarief hybrid (€):</label>
-      <input type="number" id="arrivalRateHybrid" readonly />
-      <div class="tip">Break-even tarief o.b.v. 15 kWh of opgegeven capaciteit</div>
-    </div>
-
-    <div id="fixedRateContainer">
-      <label>💶 Vast tarief per nacht vanaf nacht 2 (€):</label>
-      <input type="number" id="fixedRate" step="0.01" />
-    </div>
-  </div>
-
-  <div class="result" id="results"></div>
-  <button class="print-button" onclick="window.print()">📄 Print of bewaar als PDF</button>
-
-  <script>
+        💰 <u>Totaal:</u><br/>
+        Totale kost: €33.98<br/>
+        Totale inkomst: €41.24<br/>
+        Totale winst: €7.26<br/>
+        Totale winstmarge: 21.4%
+      </div>
+<button class="print-button" onclick="window.print()">📄 Print of bewaar als PDF</button>
+<script>
     function saveValue(id) {
       localStorage.setItem(id, document.getElementById(id).value);
     }
@@ -237,5 +252,115 @@
       calculate();
     });
   </script>
-</body>
-</html>
+<div class="client-export" style="margin-bottom:2em;">
+<h3>🔌 Elektrisch laden bij BienViennue</h3>
+<p>Je kan bij ons je elektrische of hybride wagen opladen via onze eigen laadpaal. Omdat dit toestel geen historiek van het verbruik bijhoudt, werken wij met een duidelijke en eerlijke vaste prijs per verblijfsdag.</p>
+<p>Bij aankomst rekenen we een eenmalig bedrag aan, gebaseerd op een volledige laadbeurt:</p>
+<ul>
+<li>Voor een elektrische wagen rekenen we gemiddeld 100 kWh. Dat is wat nodig is om een grotere EV volledig op te laden, zoals een Tesla Model Y of een Hyundai Ioniq 5.</li>
+<li>Voor een hybride wagen hanteren we gemiddeld 15 kWh, wat overeenkomt met een volledige laadbeurt van de meeste plug-in hybrides.</li>
+</ul>
+<p>Voor elke extra overnachting betaal je een vast dagtarief, afgestemd op een gemiddeld dagelijks verbruik (we schatten dit op 30 kWh).</p>
+<p>De exacte prijs hangt af van de elektriciteitsprijs per kWh die wij op dat moment betalen.<br/>
+  We voegen een marge toe die ons toelaat deze service rendabel aan te bieden, terwijl het voor jou als gast nog steeds voordeliger blijft dan publiek laden.</p>
+<p><strong>Zo weet je op voorhand waar je aan toe bent, zonder verrassingen achteraf.</strong></p>
+</div>
+<div class="client-export" id="clientExport" style="background:#ffffff; padding:1em; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.05); margin-top:2em;"></div>
+<button class="print-button" onclick="printClientExport()">🧾 Print klantenoverzicht</button>
+<script>
+    function updateClientExport(data) {
+      const lang = document.getElementById('lang')?.value || 'nl';
+      const translations = {
+        nl: {
+          title: "🧾 Overzicht voor de klant",
+          type: "Type wagen",
+          fullEV: "Volledig elektrisch",
+          hybrid: "Hybride",
+          nights: "Aantal nachten",
+          price: "Elektriciteitsprijs per kWh",
+          arrival: "Laadbeurt bij aankomst",
+          costPerNight: "Dagelijkse kost vanaf nacht 2",
+          total: "Totaalbedrag"
+        },
+        en: {
+          title: "🧾 Customer Summary",
+          type: "Vehicle type",
+          fullEV: "Full electric",
+          hybrid: "Hybrid",
+          nights: "Number of nights",
+          price: "Electricity price per kWh",
+          arrival: "Arrival day charge",
+          costPerNight: "Daily cost from night 2",
+          total: "Total amount"
+        },
+        fr: {
+          title: "🧾 Résumé pour le client",
+          type: "Type de véhicule",
+          fullEV: "Électrique",
+          hybrid: "Hybride",
+          nights: "Nombre de nuits",
+          price: "Prix de l’électricité par kWh",
+          arrival: "Recharge à l’arrivée",
+          costPerNight: "Coût par nuit à partir de la 2e",
+          total: "Montant total"
+        }
+      };
+
+      const t = translations[lang];
+      const html = `
+        <strong>${t.title}:</strong><br><br>
+        🚗 ${t.type}: ${t[data.vehicleType]}<br>
+        📅 ${t.nights}: ${data.days}<br>
+        ⚡ Elektriciteitsprijs per kWh die wij betalen en jullie op aankomstdag: €${data.kwhPrice.toFixed(4)}<br>⚡ Elektriciteitsprijs per kWh die jullie betalen vanaf nacht 2 (met onze marge): €${(data.kwhPrice * (1 + data.winst / 100)).toFixed(4)}<br>
+        🔋 ${t.arrival}: ${data.arrivalKwh} kWh → €${data.arrivalRate.toFixed(2)}<br>
+        📆 ${t.costPerNight}: €${data.fixedRate.toFixed(2)}<br><br>
+        💶 <strong>${t.total}: €${data.totalIncome.toFixed(2)}</strong>
+      `;
+      document.getElementById('clientExport').innerHTML = html;
+    }
+
+    function printClientExport() {
+      const content = document.getElementById('clientExport').innerHTML;
+      const win = window.open('', '', 'width=800,height=600');
+      win.document.write('<html><head><title>Export</title></head><body>');
+      win.document.write(content);
+      win.document.write('
+<script>
+  document.getElementById("printButton").addEventListener("click", function () {
+    window.open("EV_Laadkost_Calculator_Printoverzicht_juist.html", "_blank");
+  });
+</script>
+
+</body></html>');
+      win.document.close();
+      win.print();
+    }
+
+    // Bijwerken klantenexport na berekening
+    const origineleCalculate = calculate;
+    calculate = function() {
+      origineleCalculate();
+      const kwhPrice = parseFloat(document.getElementById('kwhPrice').value);
+      const winst = parseFloat(document.getElementById('winstPercentage').value);
+      const days = parseInt(document.getElementById('days').value);
+      const vehicleType = document.querySelector('input[name="vehicleType"]:checked')?.value;
+      const maxBattery = parseFloat(document.getElementById('maxBattery').value);
+      const fixedRate = parseFloat(document.getElementById('fixedRate').value);
+
+      let arrivalKwh = vehicleType === 'fullEV' ? 100 : 15;
+      if (!isNaN(maxBattery)) arrivalKwh = maxBattery;
+
+      const arrivalRate = arrivalKwh * kwhPrice;
+      const totalIncome = arrivalRate + ((days - 1) * fixedRate);
+
+      updateClientExport({ vehicleType, days, kwhPrice, arrivalKwh, arrivalRate, fixedRate, totalIncome, winst });
+    }
+  </script>
+
+<script>
+  document.getElementById("printButton").addEventListener("click", function () {
+    window.open("EV_Laadkost_Calculator_Printoverzicht_juist.html", "_blank");
+  });
+</script>
+
+</body></html>
