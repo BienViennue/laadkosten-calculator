@@ -1,10 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EV Laadkost Calculator</title>
+  <meta name="theme-color" content="#5BA9C2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="manifest" href="manifest.json" />
   <style>
     :root { --bienviennue-blauw: #5BA9C2; }
     body {
@@ -40,39 +45,199 @@
       border-radius: 8px;
       box-shadow: 0 0 8px rgba(0,0,0,0.05);
     }
-    .radio-options-vertical {
+    .result {
+      background: #ffffff;
+      padding: 1em;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .tip {
+      font-size: 0.9em;
+      color: #666;
+    }
+    .print-button {
+      background: var(--bienviennue-blauw);
+      color: white;
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 1em;
+    }
+    .hidden { display: none; }
+    a { color: var(--bienviennue-blauw); }
+
+    .radio-group {
       display: flex;
       flex-direction: column;
-      gap: 0.5em;
       margin-top: 0.5em;
     }
-    .radio-options-vertical label {
+    .radio-option {
       display: flex;
       align-items: center;
       gap: 0.5em;
-      font-weight: bold;
-      color: var(--bienviennue-blauw);
-    }
-    .radio-options-vertical input[type="radio"] {
-      transform: scale(1.2);
+      margin-bottom: 0.3em;
     }
   </style>
 </head>
 <body>
   <h1>🔌 EV Laadkost Calculator</h1>
 
+  <label for="lang">🌍 Taal / Language / Langue:</label>
+  <select id="lang">
+    <option value="nl">Nederlands</option>
+    <option value="en">English</option>
+    <option value="fr">Français</option>
+  </select>
+
   <div class="section">
+    <label>⚡ Dagprijs elektriciteit per kWh (€):</label>
+    <input type="number" id="kwhPrice" step="0.0001" />
+    <div class="tip">
+      Gebaseerd op ons EDF-contract:
+      <a href="https://particulier.edf.fr/fr/accueil/espace-client/mes-contrats.html" target="_blank">Bekijk contract</a>
+    </div>
+
+    <label>📈 Winstpercentage (%):</label>
+    <input type="number" id="winstPercentage" step="1" min="0" max="300" />
+    <div class="tip">Wordt toegepast op forfait per nacht (standaard 57%)</div>
+
     <label>🛏️ Aantal overnachtingen:</label>
     <input type="number" id="days" min="1" value="3" />
 
     <label class="radio-label">🚗 Type voertuig:</label>
-    <div class="radio-options-vertical">
-      <label><input type="radio" name="vehicleType" value="fullEV" checked> Full EV</label>
-      <label><input type="radio" name="vehicleType" value="hybrid"> Hybrid</label>
+    <div class="radio-group">
+      <label class="radio-option"><input type="radio" name="vehicleType" value="fullEV" checked /> Full EV</label>
+      <label class="radio-option"><input type="radio" name="vehicleType" value="hybrid" /> Hybrid</label>
     </div>
 
     <label>🔋 Maximale batterijcapaciteit (kWh):</label>
-    <input type="number" id="maxBattery" step="1">
+    <input type="number" id="maxBattery" step="1" />
+    <div class="tip">Overschrijft standaardwaarden van 100 kWh (EV) of 15 kWh (Hybrid)</div>
+
+    <div id="arrivalRateEVContainer">
+      <label>💡 Voorstel aankomsttarief full EV (€):</label>
+      <input type="number" id="arrivalRateEV" readonly />
+      <div class="tip">Break-even tarief o.b.v. 100 kWh of opgegeven capaciteit</div>
+    </div>
+
+    <div id="arrivalRateHybridContainer" class="hidden">
+      <label>💡 Voorstel aankomsttarief hybrid (€):</label>
+      <input type="number" id="arrivalRateHybrid" readonly />
+      <div class="tip">Break-even tarief o.b.v. 15 kWh of opgegeven capaciteit</div>
+    </div>
+
+    <div id="fixedRateContainer">
+      <label>💶 Vast tarief per nacht vanaf nacht 2 (€):</label>
+      <input type="number" id="fixedRate" step="0.01" />
+    </div>
   </div>
+
+  <div class="result" id="results"></div>
+  <button class="print-button" onclick="window.print()">📄 Print of bewaar als PDF</button>
+
+  <script>
+    function saveValue(id) {
+      localStorage.setItem(id, document.getElementById(id).value);
+    }
+
+    function loadDefaults() {
+      document.getElementById('kwhPrice').value = localStorage.getItem('kwhPrice') || 0.2124;
+      document.getElementById('winstPercentage').value = localStorage.getItem('winstPercentage') || 57;
+    }
+
+    function updateArrivalRates() {
+      const kwhPrice = parseFloat(document.getElementById('kwhPrice').value);
+      const winst = parseFloat(document.getElementById('winstPercentage').value);
+      const maxBattery = parseFloat(document.getElementById('maxBattery').value);
+      const vehicleType = document.querySelector('input[name="vehicleType"]:checked')?.value;
+
+      if (!vehicleType || isNaN(kwhPrice) || isNaN(winst)) return;
+
+      let baseKwh = vehicleType === 'fullEV' ? 100 : 15;
+      if (!isNaN(maxBattery)) baseKwh = maxBattery;
+
+      const arrivalRate = baseKwh * kwhPrice;
+      const fixedRate = 30 * kwhPrice * (1 + winst / 100);
+
+      if (vehicleType === 'fullEV') {
+        document.getElementById('arrivalRateEV').value = arrivalRate.toFixed(2);
+        document.getElementById('fixedRate').value = fixedRate.toFixed(2);
+      } else {
+        document.getElementById('arrivalRateHybrid').value = arrivalRate.toFixed(2);
+        document.getElementById('fixedRate').value = (15 * kwhPrice * (1 + winst / 100)).toFixed(2);
+      }
+    }
+
+    function calculate() {
+      const kwhPrice = parseFloat(document.getElementById('kwhPrice').value);
+      const winst = parseFloat(document.getElementById('winstPercentage').value);
+      const days = parseInt(document.getElementById('days').value);
+      const vehicleType = document.querySelector('input[name="vehicleType"]:checked')?.value;
+      const maxBattery = parseFloat(document.getElementById('maxBattery').value);
+      const fixedRate = parseFloat(document.getElementById('fixedRate').value);
+
+      if (!vehicleType || isNaN(kwhPrice) || isNaN(days) || isNaN(fixedRate) || isNaN(winst)) {
+        document.getElementById('results').innerHTML = '<strong style="color:red">Gelieve alle velden correct in te vullen.</strong>';
+        return;
+      }
+
+      let baseKwh = vehicleType === 'fullEV' ? 100 : 15;
+      if (!isNaN(maxBattery)) baseKwh = maxBattery;
+
+      const arrivalCost = baseKwh * kwhPrice;
+      const arrivalIncome = arrivalCost;
+      const kwhPerNight = 30;
+      const extraCost = (vehicleType === 'fullEV')
+        ? (days - 1) * kwhPerNight * kwhPrice
+        : (days - 1) * 15 * kwhPrice;
+      const extraIncome = (days - 1) * fixedRate;
+
+      const totalCost = arrivalCost + extraCost;
+      const totalIncome = arrivalIncome + extraIncome;
+      const totalProfit = totalIncome - totalCost;
+      const winstPercentage = ((totalProfit / totalCost) * 100).toFixed(1);
+
+      const prijsLabel = `📆 Volgende ${days - 1} nacht(en) – obv ${vehicleType === 'fullEV' ? '30' : '15'} kWh/nacht aan €${kwhPrice.toFixed(4)}:`;
+
+      document.getElementById('results').innerHTML = `
+        <strong>📅 Overzicht voor ${days} nacht(en):</strong><br><br>
+        🟢 <u>Dag van aankomst:</u><br>
+        Onze kost: €${arrivalCost.toFixed(2)}<br>
+        Klant betaalt: €${arrivalIncome.toFixed(2)}<br>
+        Winst: €0.00<br><br>
+
+        <u>${prijsLabel}</u><br>
+        Onze kost: €${extraCost.toFixed(2)}<br>
+        Klant betaalt: €${extraIncome.toFixed(2)}<br>
+        Winst: €${(extraIncome - extraCost).toFixed(2)}<br><br>
+
+        💰 <u>Totaal:</u><br>
+        Totale kost: €${totalCost.toFixed(2)}<br>
+        Totale inkomst: €${totalIncome.toFixed(2)}<br>
+        Totale winst: €${totalProfit.toFixed(2)}<br>
+        Totale winstmarge: ${winstPercentage}%
+      `;
+
+      saveValue('kwhPrice');
+      saveValue('winstPercentage');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadDefaults();
+      document.querySelectorAll('input').forEach(input => input.addEventListener('input', () => {
+        updateArrivalRates();
+        calculate();
+      }));
+      document.querySelectorAll('input[name="vehicleType"]').forEach(radio => radio.addEventListener('change', () => {
+        document.getElementById('arrivalRateEVContainer').classList.toggle('hidden', radio.value !== 'fullEV');
+        document.getElementById('arrivalRateHybridContainer').classList.toggle('hidden', radio.value !== 'hybrid');
+        updateArrivalRates();
+        calculate();
+      }));
+      updateArrivalRates();
+      calculate();
+    });
+  </script>
 </body>
 </html>
